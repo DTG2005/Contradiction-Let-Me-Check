@@ -3,7 +3,6 @@ from sentence_transformers import SentenceTransformer, util
 from Main_Operations.semantic_search import semantic_search
 from transformers import pipeline
 import nltk
-import time
 
 nltk.download('punkt')
 

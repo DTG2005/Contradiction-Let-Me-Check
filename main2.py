@@ -4,9 +4,9 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipe
 from Bhashini_APIs import api_test_transliteration, api_test_translation, api_test_asr
 import nltk
 import time
-
 # Importing functions from contractdocreader.py
 from Main_Operations.docread import docread
+
 
 # Load models
 semantic_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')

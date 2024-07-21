@@ -73,6 +73,7 @@ def docread(path: str):
         
     def read_img_file(file_path):
         try:
+            file_path = os.path.abspath('{}'.format(file_path))
             text = ocr_func(file_path)
             return text
         except Exception as e:
@@ -97,8 +98,5 @@ def docread(path: str):
             return read_img_file(file_path)
         else:
             return "Unsupported file format. Please provide a .txt, .pdf, .docx, .odt, or .doc file."
-
-    # Example usage
-    file_path = r'C:\Users\divya\Desktop\Hentai\History activities list.odt'  # Replace with the actual file path
-    text_content = read_document(file_path)
-    return text_content
+        
+    return read_document(path)

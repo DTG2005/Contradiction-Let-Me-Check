@@ -64,6 +64,6 @@ def translate(inp: str, source_lang : str, tar_lang: str):
     }
 
     compute_response = requests.post(response.json()["pipelineInferenceAPIEndPoint"]["callbackUrl"], json=dict2, headers=headers2)
-
+    print(compute_response)
     return compute_response.json()["pipelineResponse"][0]["output"][0]['target']
 
