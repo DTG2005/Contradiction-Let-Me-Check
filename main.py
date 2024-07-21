@@ -1,12 +1,23 @@
 import gradio as gr
 from sentence_transformers import SentenceTransformer, util
+from Main_Operations.semantic_search import semantic_search
 from transformers import pipeline
 import nltk
 import time
 
+nltk.download('punkt')
+
+model = "./model/" #The model file that will be locally available after training
+model_alternate = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli" #The model that will be loaded in case of a backup
+
+target_accuracy= 0.4
+
 # Load models
 semantic_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
-nli_model = pipeline("text-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")  # Update with your model path
+try:
+    nli_model = pipeline("text-classification", model=model)  # Update with your model path
+except:
+    nli_model = pipeline("text-classification", model=model_alternate) 
 
 # Initialize Bhashini API (mock for demonstration)
 def bhashini_api_mock(text, source_lang, target_lang):
@@ -39,22 +50,25 @@ def select_language(language):
     message, audio_path = welcome_messages[language_code]
     return message, audio_path
 
-# Function to get sentence embeddings
-def get_embeddings(texts):
-    return semantic_model.encode(texts, convert_to_tensor=True)
+def final_process(text : str, hypothesis: str):
+    # Perform semantic search
+    paragraphs = text.split('\n')
+    matched_paragraphs = semantic_search(hypothesis, paragraphs)
+    
+    # NLI classification
+    results = []
+    for para, similarity in matched_paragraphs:
+        sentences = nltk.sent_tokenize(para)
+        for sentence in sentences:
+            result = nli_model({"premise": sentence, "hypothesis": hypothesis})
+            results.append((sentence, result))
+
+    return results
 
 # Function to process the document
 def process_document(language, topic, problem, document, document_lang):
     # OCR and translation (mock for demonstration)
     ocr_text = bhashini_api_mock(document, document_lang, language)  # Perform OCR and translate to user's language
-
-    # Semantic search function
-    def semantic_search(query, documents, threshold=0.4):
-        query_embedding = get_embeddings([query])
-        doc_embeddings = get_embeddings(documents)
-        similarities = util.pytorch_cos_sim(query_embedding, doc_embeddings)[0]
-        relevant_indices = [i for i in range(len(similarities)) if similarities[i] >= threshold]
-        return [(documents[i], similarities[i].item()) for i in relevant_indices]
 
     # Perform semantic search
     paragraphs = ocr_text.split('\n')
@@ -95,5 +109,11 @@ with gr.Blocks() as demo:
             results_output = gr.Dataframe(headers=["Sentence", "NLI Result"])  # To display results of semantic search
             thank_you_message = gr.Textbox(label="Thank You Message")
             gr.Button("Submit").click(process_document, inputs=[user_language, user_topic, user_problem, document, document_lang], outputs=[results_output, thank_you_message])
+
+        with gr.TabItem("Test 1: TextBoxes for NLI activity:1"):
+            paragraphs_1 = gr.Textbox(label="Paragraph goes here.", lines=3)
+            hypothesis_1 = gr.Textbox(label="Hypothesis goes here.")
+            Output = gr.Textbox(label="Output")
+            gr.Button("Submit").click(final_process, inputs=[paragraphs_1, hypothesis_1], outputs=[Output])
 
 demo.launch()
