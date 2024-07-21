@@ -31,12 +31,6 @@ def transliteration(inp: str, source_lang: str, tar_lang: str):
     }
 
     response = requests.post(url="https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline", json=dict1, headers=headerdict)
-
-    print(response.content)
-
-    {"languages":[{"sourceLanguage":"hi","targetLanguageList":["hi"]}],"pipelineResponseConfig":[{"taskType":"asr","config":[{"serviceId":"ai4bharat/conformer-hi-gpu--t4","modelId":"648025f27cdd753e77f461a9","language":{"sourceLanguage":"hi","sourceScriptCode":"Deva"},"domain":["general"]}]}],"feedbackUrl":"https://dhruva-api.bhashini.gov.in/services/feedback/submit","pipelineInferenceAPIEndPoint":{"callbackUrl":"https://dhruva-api.bhashini.gov.in/services/inference/pipeline","inferenceApiKey":{"name":"Authorization","value":"sJRgS3zJfI7VEdtY21DexkvZZbhC4AkRMUOxuAo0j-kKFA9iyydDhHp3mwnuRBQF"},"isMultilingualEnabled":True,"isSyncApi":True},"pipelineInferenceSocketEndPoint":{"callbackUrl":"wss://dhruva-api.bhashini.gov.in","inferenceApiKey":{"name":"Authorization","value":"sJRgS3zJfI7VEdtY21DexkvZZbhC4AkRMUOxuAo0j-kKFA9iyydDhHp3mwnuRBQF"},"isMultilingualEnabled":True,"isSyncApi":True}}
-
-
     headers2 = {
         "Content-type": "application/json",
         response.json()["pipelineInferenceAPIEndPoint"]["inferenceApiKey"]["name"]: response.json()["pipelineInferenceAPIEndPoint"]["inferenceApiKey"]["value"]
@@ -66,5 +60,4 @@ def transliteration(inp: str, source_lang: str, tar_lang: str):
     }
 
     compute_response = requests.post(response.json()["pipelineInferenceAPIEndPoint"]["callbackUrl"], json=dict2, headers=headers2)
-
-    return compute_response.json()["pipelineResponse"][0]["output"][0]["source"]
+    return compute_response.json()["pipelineResponse"][0]["output"][0]["target"][0]
