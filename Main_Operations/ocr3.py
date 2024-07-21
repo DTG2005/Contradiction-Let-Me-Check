@@ -14,7 +14,7 @@ pip install selenium
 '''
 
 def ocr_func(path: str,):
-    chrome_driver_path = r'C:\Users\divya\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'
+    chrome_driver_path = r'../chromedriver/chromedriver.exe'
     img_file_path = path
     url = 'https://ocr.sanskritdictionary.com/'  # Replace with your URL
 
