@@ -13,8 +13,10 @@ Python 3.9.6
 pip install selenium
 '''
 
+
+
 def ocr_func(path: str,):
-    chrome_driver_path = r'../chromedriver/chromedriver.exe'
+    chrome_driver_path = r'C:\Users\divya\Desktop\Divyams_Computer_Folder\Python Files\IITISoC\Repo\Contradiction-Let-Me-Check\chromedriver\chromedriver.exe'
     img_file_path = path
     url = 'https://ocr.sanskritdictionary.com/'  # Replace with your URL
 
@@ -63,10 +65,9 @@ def ocr_func(path: str,):
         # For example, to get the content of a text area inside the iframe
         text_area_content = driver.find_element(By.TAG_NAME, "body").text
         print(text_area_content)
+        return text_area_content
 
 
     finally:
         # Close the browser
         driver.quit()
-
-    return text_area_content
