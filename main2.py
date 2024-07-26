@@ -1,5 +1,5 @@
 import gradio as gr
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer, util, CrossEncoder
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 from Bhashini_APIs import api_test_transliteration, api_test_translation, api_test_asr
 import nltk
@@ -14,21 +14,14 @@ semantic_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 nli_model_alt = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
 
 # Load NLI models for each language
-nli_models = {
-    "en": pipeline("text-classification", model=nli_model_alt),
-    "hi": pipeline("text-classification", model=nli_model_alt),
-    "mr": pipeline("text-classification", model=nli_model_alt),
-    "gu": pipeline("text-classification", model=nli_model_alt),
-    "pa": pipeline("text-classification", model=nli_model_alt),
-    "bn": pipeline("text-classification", model=nli_model_alt),
-}
+model = CrossEncoder('cross-encoder/nli-deberta-v3-base')
 
 
 
 # Initialize Bhashini API (mock for demonstration)
 def bhashini_api_mock(text, source_lang, target_lang):
     # Mock function to represent translation, ASR, transliteration
-    return text  # In actual implementation, connect to Bhashini API
+    return api_test_translation.translate(text, source_lang=source_lang, tar_lang=target_lang)  # In actual implementation, connect to Bhashini API
 
 # Welcome messages and audio files (mock paths)
 welcome_messages = {
@@ -61,28 +54,38 @@ def semantic_search(query, documents, threshold=0.4):
 def process_document(language, topic, problem, document, document_lang):
     # Read and translate the document
     document_text = docread(document)
-    ocr_text = bhashini_api_mock(document_text, document_lang, language)  # Translate to user's language
+    if(language!=document_lang):
+        topic = bhashini_api_mock(topic, language, document_lang)
+        prob_eng = bhashini_api_mock(topic, language, "en")
+        problem = bhashini_api_mock(topic, language, document_lang)
+    # ocr_text = bhashini_api_mock(document_text, document_lang, "en")  # Translate to user's language
 
     # Semantic search
-    matched_paragraphs = semantic_search(topic, [ocr_text])
+    matched_paragraphs = semantic_search(topic, [document_text])
+    print(matched_paragraphs)
     results = []
-
-    nli_model = nli_models[language]  # Select the appropriate NLI model
+    # model=model# Select the appropriate NLI model
 
     for para, similarity in matched_paragraphs:
         sentences = nltk.sent_tokenize(para)
         for sentence in sentences:
             try:
+                if document_lang!="en":
+                    sentext = bhashini_api_mock(sentence, document_lang, "en")
+                else:
+                    sentext = sentence
                 # Ensure the input is correctly formatted
-                inputs = f"{sentence} {problem}"
+                inputs = f"{sentext} {problem}"
+                scores = model.predict([(sentext), (prob_eng)])
                 print(f"Inputs to NLI model: {inputs}")  # Debugging line
-                result = nli_model(inputs)[0]
+                label_mapping = ['contradiction', 'entailment', 'neutral']
+                result = [label_mapping[score_max] for score_max in scores.argmax(axis=1)]
                 results.append((sentence, result))
             except Exception as e:
                 print(f"Error processing sentence: {sentence}, Error: {e}")
 
     # Final output
-    thank_you_message = bhashini_api_mock("Thank you!", "en", language)
+    thank_you_message = "Thank you!"
     return results, thank_you_message
 
 # Gradio interface
@@ -123,7 +126,7 @@ with gr.Blocks() as demo:
         
         with gr.TabItem("Step 3: Upload Document"):
             document = gr.File(label="Upload your legal document")
-            document_lang = gr.Dropdown(["English", "Hindi", "Marathi", "Gujarati", "Punjabi", "Bengali"], label="Document Language")
+            document_lang = gr.Dropdown(["en", "hi", "mr", "gu", "pa", "bn"], label="Document Language")
             results_output = gr.Dataframe(headers=["Sentence", "NLI Result"])  # To display results of semantic search
             thank_you_message = gr.Textbox(label="Thank You Message")
             gr.Button("Submit").click(process_document, inputs=[user_language, user_topic, user_problem, document, document_lang], outputs=[results_output, thank_you_message])
