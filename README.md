@@ -74,3 +74,5 @@ Contract Contradiction Checker is an app, which helps you to do the following:
 9) Document text reader using PyMuPDF
 
 All resources are available on the GitHub repository.
+
+Note: prefer to use single-pretrained-model branch because of it being more responsive and lightweight than this one.
