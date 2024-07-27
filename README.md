@@ -71,3 +71,7 @@ All resources are available on the GitHub repository.
 # Project report File:-
 
 View the project report file [here](https://docs.google.com/document/d/1IckT809b9js75s1wAiRs4aXBhnT6H45kTc2gKAhTuAE/) 
+
+# Model files:-
+
+Get the model files [here](https://drive.google.com/drive/folders/153oDWFAo4CDtxjleLrd4HnqUcWRh8cl-?usp=drive_link).
