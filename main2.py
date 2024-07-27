@@ -2,8 +2,7 @@ import gradio as gr
 from sentence_transformers import SentenceTransformer, util, CrossEncoder
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 from Bhashini_APIs import api_test_transliteration, api_test_translation, api_test_asr, api_test_tts
-import nltk
-import time
+import torch
 import base64
 # Importing functions from contractdocreader.py
 from Main_Operations.docread import docread
@@ -22,14 +21,29 @@ semantic_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 nli_model_alt = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
 
 # Load NLI models for each language
-model = CrossEncoder('cross-encoder/nli-deberta-v3-base')
+model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/nli-deberta-v3-base')
+tokenizer = AutoTokenizer.from_pretrained('cross-encoder/nli-deberta-v3-base')
 
-
+def barebones_nli(premise, hypothesis):
+    model.eval()
+    features = tokenizer([premise], [hypothesis],  padding=True, truncation=True, return_tensors="pt")
+    with torch.no_grad():
+        scores = model(**features).logits
+        label_mapping = ['contradiction', 'entailment', 'neutral']
+        labels = [label_mapping[score_max] for score_max in scores.argmax(dim=1)]
+        return(labels)
 
 # Initialize Bhashini API (mock for demonstration)
 def bhashini_api_mock(text, source_lang, target_lang):
     # Mock function to represent translation, ASR, transliteration
     return api_test_translation.translate(text, source_lang=source_lang, tar_lang=target_lang)  # In actual implementation, connect to Bhashini API
+
+def NLI_language(text1, lang1, text2, lang2):
+    if lang1 != "en":
+        text1 = api_test_translation.translate(text1, lang1, "en")
+    if lang2!= "en":
+        text2 = api_test_translation.translate(text2, lang2, "en")
+    return barebones_nli(text1, text2)[0]
 
 # Welcome messages and audio files (mock paths)
 welcome_messages = {
@@ -82,17 +96,20 @@ def select_language(language):
 #     return [(documents[i], similarities[i].item()) for i in relevant_indices]
 
 # Function to process the document
-def process_document(language, topic, problem, document, document_lang):
-    # Read and translate the document
-    document_text = docread(document)
+def process_document(language, topic, problem, document_stuff, document_file, document_lang):
+    # Determine the document content based on the input type
+    if document_stuff:
+        document_text = document_stuff
+    else:
+        document_text = docread(document_file)
     prob_eng = ""
     if language != document_lang:
         topic = bhashini_api_mock(topic, language, document_lang)
-        if language != "en":
-            prob_eng = bhashini_api_mock(topic, language, "en")
-        else:
-            prob_eng = problem
-        problem = bhashini_api_mock(topic, language, document_lang)
+        problem = bhashini_api_mock(problem, language, document_lang)
+    if document_lang != "en":
+        prob_eng = bhashini_api_mock(problem, document_lang, "en")
+    else:
+        prob_eng = problem
 
     # Semantic search
     matched_paragraphs = semantic_search(topic, [document_text])
@@ -102,15 +119,19 @@ def process_document(language, topic, problem, document, document_lang):
         for sentence in sentences:
             try:
                 sentext = bhashini_api_mock(sentence, document_lang, "en") if document_lang != "en" else sentence
-                scores = model.predict([(sentext, prob_eng)])
-                label_mapping = ['contradiction', 'entailment', 'neutral']
-                result = [label_mapping[score_max] for score_max in scores.argmax(axis=1)]
+                # scores = model.predict([(sentext, prob_eng)])
+                # label_mapping = ['contradiction', 'neutral', 'contradiction']
+                result = barebones_nli(sentext, prob_eng)[0]
+                print(f"-------------------{sentext}----------------------\n------------------{prob_eng}-----------------")
                 results.append((sentence, result))
             except Exception as e:
                 print(f"Error processing sentence: {sentence}, Error: {e}")
 
     # Translate the output back to the user's selected language
-    translated_results = [(sentence, bhashini_api_mock(f"{result}", 'en', language)) for sentence, result in results]
+    if language!="en":
+        translated_results = [(sentence, bhashini_api_mock(f"{result}", 'en', language)) for sentence, result in results]
+    else:
+        translated_results = results
 
     # Combine results into a single text
     final_output_text = "\n".join([f"{sentence}\t{result}" for sentence, result in results])
@@ -135,12 +156,48 @@ def process_document(language, topic, problem, document, document_lang):
 with gr.Blocks() as demo:
     gr.Markdown("## Welcome! Please wait while we load...")
     
+
+    
     with gr.Tabs():
+
+        with gr.TabItem("Main App: NLI Model - Deberta"):
+            language_1 = gr.Radio(["en", "hi", "mr", "gu", "pa", "bn"], label="Select premise language")
+            txt = gr.Textbox(label="Enter your premise")
+            language_2 = gr.Radio(["en", "hi", "mr", "gu", "pa", "bn"], label="Select hypothesis language")
+            txt2 = gr.Textbox(label="Enter your hypothesis")
+            txt3 = gr.Textbox(label="Output")
+            gr.Button("Submit").click(NLI_language, inputs=[txt, language_1, txt2, language_2], outputs=txt3)
+
         with gr.TabItem("Step 1: Welcome"):
             language_req = gr.Radio(["en", "hi", "mr", "gu", "pa", "bn"], label="Select your language")
             welcome_output = gr.Textbox()
             welcome_audio = gr.Audio()
             gr.Button("Submit").click(select_language, inputs=language_req, outputs=[welcome_output, welcome_audio])
+
+        with gr.TabItem("Step 2: Input Language and Details"):
+            header_text_translated = gr.Textbox(label="Translated Header")
+            header_audio = gr.Audio()
+            gr.Button("Translate This").click(lambda lang: text_to_speech(bhashini_api_mock(user_topic.label, "en", lang), lang, "./audio_headers/header_1.wav"), inputs=language_req, outputs=[header_audio, header_text_translated])
+            user_topic = gr.Textbox(label="Topic of Concern")
+            user_problem = gr.Textbox(label="Detailed Problem Description")
+            gr.Button("Translate This").click(lambda lang: text_to_speech(bhashini_api_mock(user_problem.label, "en", lang), lang, "./audio_headers/header_1.wav"), inputs=language_req, outputs=[header_audio, header_text_translated])
+        
+        with gr.TabItem("Step 3: Upload Document"):
+            document = gr.File(label="Upload your legal document")
+            input_textbox = gr.Textbox(label="Input", visible=False)
+            document_lang = gr.Dropdown(["en", "hi", "mr", "gu", "pa", "bn"], label="Document Language")
+            results_output = gr.Dataframe(headers=["Sentence", "NLI Result"])  # To display results of semantic search
+            translated_output = gr.Dataframe(headers=["Translated Sentence", "Translated NLI Result"])
+            original_text_output = gr.Textbox(label="Original Document Text", show_copy_button=True)
+            translated_text_output = gr.Textbox(label="Translated Document Text", show_copy_button=True)
+            # original_audio_output = gr.Audio(label="Original Audio Output")
+            # translated_audio_output = gr.Audio(label="Translated Audio Output")
+            def show_text():
+                return {input_textbox: gr.Textbox(label="Input", visible=True)}
+            thank_you_message = gr.Textbox(label="Thank You Message")
+            # gr.Button("Help").click(process_document, inputs=[language_req, user_topic, user_problem, document, document_lang], outputs=[results_output, translated_output, original_text_output, translated_text_output, original_audio_output, translated_audio_output, thank_you_message])
+            gr.Button("Enable Long Text Input").click(show_text, inputs=[], outputs=[input_textbox])
+            gr.Button("Help").click(process_document, inputs=[language_req, user_topic, user_problem, input_textbox, document, document_lang], outputs=[results_output, translated_output, original_text_output, translated_text_output, thank_you_message])
 
         with gr.TabItem("Service 1: Transliteration (Only from english available so far)"):
             header_text = gr.Markdown("Transliteration (Only from English available so far)")
@@ -178,26 +235,5 @@ with gr.Blocks() as demo:
             audio = gr.Audio(type="filepath", label="Upload Audio")
             text = gr.Textbox(label="Output", show_copy_button=True)
             gr.Button("Submit").click(api_test_asr.asr, inputs=[audio, language], outputs=text)
-
-        with gr.TabItem("Step 2: Input Language and Details"):
-            header_text_translated = gr.Textbox(label="Translated Header")
-            header_audio = gr.Audio()
-            gr.Button("Translate This").click(lambda lang: text_to_speech(bhashini_api_mock(user_topic.label, "en", lang), lang, "./audio_headers/header_1.wav"), inputs=language_req, outputs=[header_audio, header_text_translated])
-            user_topic = gr.Textbox(label="Topic of Concern")
-            user_problem = gr.Textbox(label="Detailed Problem Description")
-            gr.Button("Translate This").click(lambda lang: text_to_speech(bhashini_api_mock(user_problem.label, "en", lang), lang, "./audio_headers/header_1.wav"), inputs=language_req, outputs=[header_audio, header_text_translated])
-        
-        with gr.TabItem("Step 3: Upload Document"):
-            document = gr.File(label="Upload your legal document")
-            document_lang = gr.Dropdown(["en", "hi", "mr", "gu", "pa", "bn"], label="Document Language")
-            results_output = gr.Dataframe(headers=["Sentence", "NLI Result"])  # To display results of semantic search
-            translated_output = gr.Dataframe(headers=["Translated Sentence", "Translated NLI Result"])
-            original_text_output = gr.Textbox(label="Original Document Text", show_copy_button=True)
-            translated_text_output = gr.Textbox(label="Translated Document Text", show_copy_button=True)
-            # original_audio_output = gr.Audio(label="Original Audio Output")
-            # translated_audio_output = gr.Audio(label="Translated Audio Output")
-            thank_you_message = gr.Textbox(label="Thank You Message")
-            # gr.Button("Help").click(process_document, inputs=[language_req, user_topic, user_problem, document, document_lang], outputs=[results_output, translated_output, original_text_output, translated_text_output, original_audio_output, translated_audio_output, thank_you_message])
-            gr.Button("Help").click(process_document, inputs=[language_req, user_topic, user_problem, document, document_lang], outputs=[results_output, translated_output, original_text_output, translated_text_output, thank_you_message])
 
 demo.launch()
