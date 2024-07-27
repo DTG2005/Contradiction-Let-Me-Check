@@ -13,7 +13,7 @@ def tokenize_sentences(text : str, language_code):
     nlp = initialize_pipeline(language_code)
     doc = nlp(text)
     sentences = [sentence.text for sentence in doc.sentences]
-    if language_code == "gu":
+    if language_code == "gu" or language_code == "pa":
         lisText = text.split('.')
         return lisText
     return sentences
