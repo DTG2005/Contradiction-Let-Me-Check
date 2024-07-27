@@ -3,16 +3,21 @@ import stanza
 
 # Function to download the model and initialize the pipeline
 def initialize_pipeline(language_code):
-    if language_code=="pa":
-        language_code = 'gu'
+    if language_code=="pa" or language_code == "gu":
+        language_code = 'en'
+    elif language_code=="mr" or language_code == "bn":
+        language_code = "hi"
     stanza.download(language_code)
     return stanza.Pipeline(language_code)
 
 # Function to tokenize text into sentences using Stanza
-def tokenize_sentences(text, language_code):
+def tokenize_sentences(text : str, language_code):
     nlp = initialize_pipeline(language_code)
     doc = nlp(text)
     sentences = [sentence.text for sentence in doc.sentences]
+    if language_code == "gu":
+        lisText = text.split('.')
+        return lisText
     return sentences
 
 # Load model
