@@ -5,6 +5,8 @@ import stanza
 def initialize_pipeline(language_code):
     if language_code=="pa" or language_code == "gu":
         language_code = 'en'
+    elif language_code=="mr" or language_code == "bn":
+        language_code = "hi"
     stanza.download(language_code)
     return stanza.Pipeline(language_code)
 
