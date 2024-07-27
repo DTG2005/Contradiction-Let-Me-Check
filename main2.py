@@ -20,7 +20,7 @@ tokenizer = AutoTokenizer.from_pretrained("ai4bharat/indic-bert")
 
 # Load NLI models for each language
 nli_models = {
-    "en": AutoModelForSequenceClassification.from_pretrained("", num_labels=3),
+    "en": AutoModelForSequenceClassification.from_pretrained("MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7", num_labels=3),
     "hi": AutoModelForSequenceClassification.from_pretrained("./models/hi_model", num_labels=3),
     "mr": AutoModelForSequenceClassification.from_pretrained("./models/mr_model", num_labels=3),
     "gu": AutoModelForSequenceClassification.from_pretrained("./models/gu_model", num_labels=3),
