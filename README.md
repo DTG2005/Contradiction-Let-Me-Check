@@ -22,7 +22,7 @@ Contract Contradiction Checker is an app, which helps you to do the following:
 
 Contract Contradiction Checker (CCC) Gradio app can be accessed in the following ways:
 
-1. Open the app available in the GitHub repository. Use the commands:- `pip install gradio sentence_transformers transformers torch stanza PyMuPDF selenium` to install dependencies, followed by `python main2.py`.
+1. Open the app available in the GitHub repository. Use the commands:- `pip install gradio sentence_transformers transformers torch stanza PyMuPDF selenium python-docx odfpy pypandoc sentencepiece ` to install dependencies, followed by `python main2.py`. Also, use `git checkout main` to switch to the proof-of-work branch that has the same functionality but uses our 5 finetuned model to do the same work.
 
 2. Now, choose the language in which you will address your concern or problem.
 
