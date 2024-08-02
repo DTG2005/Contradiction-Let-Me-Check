@@ -22,7 +22,7 @@ Contract Contradiction Checker is an app, which helps you to do the following:
 
 Contract Contradiction Checker (CCC) Gradio app can be accessed in the following ways:
 
-1. Open the app available in the GitHub repository. Use the commands:- `pip install gradio sentence_transformers transformers torch stanza PyMuPDF selenium python-docx odfpy pypandoc sentencepiece ` to install dependencies, followed by `python main2.py`. Also, use `git checkout single-pretrained-model` to switch to the recommended branch that has the same functionality with better performance.
+1. Open the app available in the GitHub repository. Use the commands:- `pip install gradio sentence_transformers transformers torch stanza PyMuPDF selenium python-docx odfpy pypandoc sentencepiece ` to install dependencies, followed by `python main2.py`. Also, use `git checkout main` to switch to the proof-of-work branch that has the same functionality but uses our 5 finetuned model to do the same work.
 
 2. Now, choose the language in which you will address your concern or problem.
 
@@ -75,3 +75,9 @@ View the project report file [here](https://docs.google.com/document/d/1IckT809b
 # Model files:-
 
 Get the model files [here](https://drive.google.com/drive/folders/153oDWFAo4CDtxjleLrd4HnqUcWRh8cl-?usp=drive_link).
+
+Note: prefer to use single-pretrained-model branch because of it being more responsive, lightweight and accurate than this one.
+
+# History and Other related references
+
+- We also trained mDeberta Model on all the languages all at once, going with 3 epochs for each language. After 15 epochs, however, overfitting occurred and we had to abandon it. The model can be found [here](https://drive.google.com/drive/folders/1UrX23xcG1eBJNBD7WoexYqSLbLP8Fhe6?usp=drive_link).
