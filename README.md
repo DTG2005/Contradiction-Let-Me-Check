@@ -77,3 +77,7 @@ View the project report file [here](https://docs.google.com/document/d/1IckT809b
 Get the model files [here](https://drive.google.com/drive/folders/153oDWFAo4CDtxjleLrd4HnqUcWRh8cl-?usp=drive_link).
 
 Note: prefer to use single-pretrained-model branch because of it being more responsive, lightweight and accurate than this one.
+
+# History and Other related references
+
+- We also trained mDeberta Model on all the languages all at once, going with 3 epochs for each language. After 15 epochs, however, overfitting occurred and we had to abandon it. The model can be found [here](https://drive.google.com/drive/folders/1UrX23xcG1eBJNBD7WoexYqSLbLP8Fhe6?usp=drive_link).
