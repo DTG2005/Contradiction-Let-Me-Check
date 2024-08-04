@@ -95,3 +95,4 @@ Note: prefer to use single-pretrained-model branch because of it being more resp
 # History and Other related references
 
 - We also trained mDeberta Model on all the languages all at once, going with 3 epochs for each language. After 15 epochs, however, overfitting occurred and we had to abandon it. The model can be found [here](https://drive.google.com/drive/folders/1UrX23xcG1eBJNBD7WoexYqSLbLP8Fhe6?usp=drive_link).
+- You can also check out our detailed documentation [here](https://docs.google.com/document/d/1NKI2h4Lz7j_lnOMguyerH1m0xiSmI6tOfOT7suvWww8/edit?usp=sharing)
