@@ -36,9 +36,9 @@ Contract Contradiction Checker (CCC) Gradio app can be accessed in the following
    Concern box and Detail Problem Description Box. Hence, the Copy and Paste functionality is necessary. You can see the outputs of all the extra functionality below.
 
    ![Transliteration](./Imgs/Transliteration.png) <br><center>Transliteration</center><br/>
-
+   
    ![Translation](./Imgs/Translation.png) <br/><center>Translation</center><br/>
-
+   
    ![ASR](./Imgs/ASR.png) <br/><center>Automatic Speech Recognition</center><br/>
 
 7. Now upload your contract text or image in the Upload your legal document box. You can provide text input also.
@@ -95,3 +95,4 @@ Note: prefer to use single-pretrained-model branch because of it being more resp
 # History and Other related references
 
 - We also trained mDeberta Model on all the languages all at once, going with 3 epochs for each language. After 15 epochs, however, overfitting occurred and we had to abandon it. The model can be found [here](https://drive.google.com/drive/folders/1UrX23xcG1eBJNBD7WoexYqSLbLP8Fhe6?usp=drive_link).
+- You can also check out our detailed documentation [here](https://docs.google.com/document/d/1NKI2h4Lz7j_lnOMguyerH1m0xiSmI6tOfOT7suvWww8/edit?usp=sharing)
